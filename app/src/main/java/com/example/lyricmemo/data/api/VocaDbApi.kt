@@ -8,9 +8,10 @@ interface VocaDbApi {
     @GET("api/songs")
     suspend fun searchSongs(
         @Query("query") query: String,
+        @Query("nameMatchMode") nameMatchMode: String, // Exact, Partial, StartsWith, Word, Words
         @Query("fields") fields: String = "Lyrics",
         @Query("lang") lang: String = "Japanese",
-        @Query("maxResults") maxResults: Int = 20, // デフォルトを20件に変更
+        @Query("maxResults") maxResults: Int = 50,
         @Query("sort") sort: String = "FavoritedTimes"
     ): VocaDbSongResponse
 }

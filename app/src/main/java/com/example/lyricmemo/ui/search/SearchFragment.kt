@@ -30,14 +30,10 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         super.onViewCreated(view, savedInstanceState)
 
         etSearch = view.findViewById(R.id.etSearch)
-        val btnSearch = view.findViewById<Button>(R.id.btnSearch)
         val btnBack = view.findViewById<Button>(R.id.btnBack)
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
         val progressBar = view.findViewById<ProgressBar>(R.id.progressBar)
         val tvErrorMessage = view.findViewById<TextView>(R.id.tvErrorMessage)
-
-        // 検索ボタンを非表示にする（リアルタイム検索になるため）
-        btnSearch.visibility = View.GONE
 
         val adapter = SearchResultAdapter { clickedSong ->
             viewModel.selectSong(clickedSong)
@@ -53,7 +49,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
 
         btnBack.setOnClickListener {
-            // ホームに戻る時はクリアしておく（お好みで）
+            // ホームに戻る時はクリアしておく
             etSearch?.text?.clear()
             viewModel.clearSearchResults()
             findNavController().popBackStack()
@@ -71,7 +67,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                         recyclerView.isVisible = false
                     } else {
                         tvErrorMessage.isVisible = false
-                        // 結果がない場合はRecyclerViewも隠す（初期状態など）
                         recyclerView.isVisible = state.searchResults.isNotEmpty()
                         adapter.submitList(state.searchResults)
                     }

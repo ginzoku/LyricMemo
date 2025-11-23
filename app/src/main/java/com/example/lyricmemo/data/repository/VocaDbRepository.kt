@@ -12,9 +12,11 @@ class VocaDbRepository @Inject constructor(
     // 1件だけ取得する
     suspend fun getSong(songName: String): SongItem? {
         return try {
-            // 歌詞があるものだけを対象にしたいので、少し多めに取得してフィルタリングする
-            val response = vocaDbApi.searchSongs(query = songName, maxResults = 10)
-            // 歌詞が存在する最初の曲を返す
+            val response = vocaDbApi.searchSongs(
+                query = songName, 
+                nameMatchMode = "Partial", // 部分一致
+                maxResults = 10
+            )
             response.items.firstOrNull { !it.lyrics.isNullOrEmpty() }
         } catch (e: IOException) {
             e.printStackTrace()
@@ -31,9 +33,10 @@ class VocaDbRepository @Inject constructor(
     // 複数件検索して返す (歌詞があるものだけ)
     suspend fun searchSongsList(query: String): List<SongItem> {
         return try {
-            // 歌詞がない曲も結果に含まれるため、少し多めに取得してからフィルタリングする
-            val response = vocaDbApi.searchSongs(query = query, maxResults = 50)
-            // 歌詞リストが空でないものを抽出
+            val response = vocaDbApi.searchSongs(
+                query = query, 
+                nameMatchMode = "Partial"
+            )
             response.items.filter { !it.lyrics.isNullOrEmpty() }
         } catch (e: IOException) {
             e.printStackTrace()

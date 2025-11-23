@@ -70,7 +70,6 @@ class SongSearchViewModel @Inject constructor(
         viewModelScope.launch {
             _searchResultState.value = SearchResultUiState(isLoading = true)
             
-            // スペースをAPIが解釈できる形に変換 (実質的なAND検索)
             val formattedQuery = query.trim().replace(Regex("\\s+"), " ")
             val results = repository.searchSongsList(formattedQuery)
 

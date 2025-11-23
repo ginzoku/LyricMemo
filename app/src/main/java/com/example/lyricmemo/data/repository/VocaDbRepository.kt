@@ -14,7 +14,7 @@ class VocaDbRepository @Inject constructor(
         return try {
             val response = vocaDbApi.searchSongs(
                 query = songName, 
-                nameMatchMode = "Partial", // 部分一致
+                nameMatchMode = "Auto", // Autoに戻す
                 maxResults = 10
             )
             response.items.firstOrNull { !it.lyrics.isNullOrEmpty() }
@@ -35,7 +35,7 @@ class VocaDbRepository @Inject constructor(
         return try {
             val response = vocaDbApi.searchSongs(
                 query = query, 
-                nameMatchMode = "Partial"
+                nameMatchMode = "Auto" // Autoに戻す
             )
             response.items.filter { !it.lyrics.isNullOrEmpty() }
         } catch (e: IOException) {

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.lyricmemo.ui.home.HomeFragment"
+        android:label="HomeFragment"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_homeFragment_to_searchFragment"
+            app:destination="@id/searchFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_savedSongListFragment"
+            app:destination="@id/savedSongListFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.example.lyricmemo.ui.search.SearchFragment"
+        android:label="SearchFragment"
+        tools:layout="@layout/fragment_search">
+        <!-- 追加: SearchFragmentから直接詳細画面への遷移 -->
+        <action
+            android:id="@+id/action_searchFragment_to_lyricsDetailFragment"
+            app:destination="@id/lyricsDetailFragment" />
+    </fragment>
+    
+    <fragment
+        android:id="@+id/lyricsDetailFragment"
+        android:name="com.example.lyricmemo.ui.details.LyricsDetailFragment"
+        android:label="LyricsDetailFragment"
+        tools:layout="@layout/fragment_lyrics_detail" />
+
+    <fragment
+        android:id="@+id/savedSongListFragment"
+        android:name="com.example.lyricmemo.ui.list.SavedSongListFragment"
+        android:label="SavedSongListFragment"
+        tools:layout="@layout/fragment_saved_song_list">
+        <action
+            android:id="@+id/action_savedSongListFragment_to_lyricsDetailFragment"
+            app:destination="@id/lyricsDetailFragment" />
+    </fragment>
+</navigation>

@@ -29,9 +29,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 画面表示時に前回の検索結果をクリア
-        viewModel.clearSearchResults()
-
         etSearch = view.findViewById(R.id.etSearch)
         val btnSearch = view.findViewById<Button>(R.id.btnSearch)
         val btnBack = view.findViewById<Button>(R.id.btnBack)
@@ -56,7 +53,9 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
 
         btnBack.setOnClickListener {
+            // ホームに戻る時はクリアしておく（お好みで）
             etSearch?.text?.clear()
+            viewModel.clearSearchResults()
             findNavController().popBackStack()
         }
 
@@ -72,7 +71,8 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                         recyclerView.isVisible = false
                     } else {
                         tvErrorMessage.isVisible = false
-                        recyclerView.isVisible = true
+                        // 結果がない場合はRecyclerViewも隠す（初期状態など）
+                        recyclerView.isVisible = state.searchResults.isNotEmpty()
                         adapter.submitList(state.searchResults)
                     }
                 }

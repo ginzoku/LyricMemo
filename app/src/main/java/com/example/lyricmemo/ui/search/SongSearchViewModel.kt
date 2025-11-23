@@ -6,9 +6,14 @@ import com.example.lyricmemo.data.db.SavedSong
 import com.example.lyricmemo.data.model.SongItem
 import com.example.lyricmemo.data.repository.VocaDbRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,6 +33,7 @@ data class SearchResultUiState(
     val errorMessage: String? = null
 )
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class SongSearchViewModel @Inject constructor(
     private val repository: VocaDbRepository
@@ -41,24 +47,44 @@ class SongSearchViewModel @Inject constructor(
     private val _searchResultState = MutableStateFlow(SearchResultUiState())
     val searchResultState: StateFlow<SearchResultUiState> = _searchResultState.asStateFlow()
 
-    // 検索実行 (リストを取得)
-    fun searchSongs(query: String) {
+    // 検索クエリ用のフロー
+    private val _searchQuery = MutableStateFlow("")
+
+    init {
+        _searchQuery
+            .debounce(500) // 500ミリ秒入力がなければ実行
+            .filter { it.isNotBlank() } // 空白でなければ実行
+            .onEach { query ->
+                searchSongs(query)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    // 検索クエリを更新する (UIから呼ばれる)
+    fun onQueryChanged(query: String) {
+        _searchQuery.value = query
+    }
+
+    // 検索実行 (内部ロジック)
+    private fun searchSongs(query: String) {
         viewModelScope.launch {
             _searchResultState.value = SearchResultUiState(isLoading = true)
             
-            val results = repository.searchSongsList(query)
+            // スペースをAPIが解釈できる形に変換 (実質的なAND検索)
+            val formattedQuery = query.trim().replace(Regex("\\s+"), " ")
+            val results = repository.searchSongsList(formattedQuery)
 
             if (results.isNotEmpty()) {
                 _searchResultState.value = SearchResultUiState(searchResults = results)
             } else {
                 _searchResultState.value = SearchResultUiState(
-                    errorMessage = "該当する曲が見つかりませんでした、または通信エラーが発生しました。"
+                    errorMessage = "該当する曲が見つかりませんでした。"
                 )
             }
         }
     }
 
-    // 検索結果をクリアする (画面に戻ってきた時などに呼ぶ)
+    // 検索結果をクリアする
     fun clearSearchResults() {
         _searchResultState.value = SearchResultUiState()
     }

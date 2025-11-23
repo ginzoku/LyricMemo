@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -38,26 +39,23 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         val progressBar = view.findViewById<ProgressBar>(R.id.progressBar)
         val tvErrorMessage = view.findViewById<TextView>(R.id.tvErrorMessage)
 
+        // 検索ボタンを非表示にする（リアルタイム検索になるため）
+        btnSearch.visibility = View.GONE
+
         val adapter = SearchResultAdapter { clickedSong ->
             viewModel.selectSong(clickedSong)
-            // 詳細画面へ遷移
             findNavController().navigate(R.id.action_searchFragment_to_lyricsDetailFragment)
-            // 遷移時に検索欄をクリアしない（戻ってきた時に残すため）
         }
 
         recyclerView.adapter = adapter
         recyclerView.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
 
-        btnSearch.setOnClickListener {
-            val query = etSearch?.text.toString()
-            if (query.isNotBlank()) {
-                // ViewModelの検索メソッドを呼ぶだけ
-                viewModel.searchSongs(query)
-            }
+        // EditTextのテキスト変更を監視
+        etSearch?.addTextChangedListener {
+            viewModel.onQueryChanged(it.toString())
         }
 
         btnBack.setOnClickListener {
-            // ホームに戻る時はクリアしておく（お好みで）
             etSearch?.text?.clear()
             findNavController().popBackStack()
         }
@@ -74,8 +72,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                         recyclerView.isVisible = false
                     } else {
                         tvErrorMessage.isVisible = false
-                        // 結果がない場合はRecyclerViewも隠す（初期状態など）
-                        recyclerView.isVisible = state.searchResults.isNotEmpty()
+                        recyclerView.isVisible = true
                         adapter.submitList(state.searchResults)
                     }
                 }

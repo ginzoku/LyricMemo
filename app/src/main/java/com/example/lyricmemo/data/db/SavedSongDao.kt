@@ -1,6 +1,7 @@
 package com.example.lyricmemo.data.db
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
@@ -9,6 +10,9 @@ import kotlinx.coroutines.flow.Flow
 interface SavedSongDao {
     @Insert
     suspend fun insert(song: SavedSong)
+
+    @Delete
+    suspend fun delete(song: SavedSong)
 
     @Query("SELECT * FROM saved_songs ORDER BY savedAt DESC")
     fun getAllSongs(): Flow<List<SavedSong>>

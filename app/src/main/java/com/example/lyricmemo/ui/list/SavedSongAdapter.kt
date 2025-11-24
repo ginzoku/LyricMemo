@@ -11,7 +11,8 @@ import com.example.lyricmemo.R
 import com.example.lyricmemo.data.db.SavedSong
 
 class SavedSongAdapter(
-    private val onItemClick: (SavedSong) -> Unit
+    private val onItemClick: (SavedSong) -> Unit,
+    private val onItemLongClick: (SavedSong) -> Unit
 ) : ListAdapter<SavedSong, SavedSongAdapter.ViewHolder>(SavedSongDiffCallback()) {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -31,12 +32,16 @@ class SavedSongAdapter(
         holder.tvTitle.text = song.title
         holder.tvArtist.text = song.artist
         
-        // 歌詞の改行をスペースに置換して、プレビューとして見やすくする
         val previewText = song.lyrics.replace("\n", " ")
         holder.tvLyricsPreview.text = previewText
 
         holder.itemView.setOnClickListener {
             onItemClick(song)
+        }
+        
+        holder.itemView.setOnLongClickListener {
+            onItemLongClick(song)
+            true // trueを返してイベントを消費
         }
     }
 

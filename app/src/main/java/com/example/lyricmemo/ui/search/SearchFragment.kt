@@ -30,7 +30,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         super.onViewCreated(view, savedInstanceState)
 
         etSearch = view.findViewById(R.id.etSearch)
-        val btnBack = view.findViewById<Button>(R.id.btnBack)
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
         val progressBar = view.findViewById<ProgressBar>(R.id.progressBar)
         val tvErrorMessage = view.findViewById<TextView>(R.id.tvErrorMessage)
@@ -46,13 +45,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         // EditTextのテキスト変更を監視
         etSearch?.addTextChangedListener {
             viewModel.onQueryChanged(it.toString())
-        }
-
-        btnBack.setOnClickListener {
-            // ホームに戻る時はクリアしておく
-            etSearch?.text?.clear()
-            viewModel.clearSearchResults()
-            findNavController().popBackStack()
         }
 
         // 検索結果を監視

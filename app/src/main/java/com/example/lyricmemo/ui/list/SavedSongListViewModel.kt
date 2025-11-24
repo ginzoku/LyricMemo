@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 enum class SortOrder {
@@ -20,7 +21,7 @@ enum class SortOrder {
 
 @HiltViewModel
 class SavedSongListViewModel @Inject constructor(
-    savedSongRepository: SavedSongRepository
+    private val savedSongRepository: SavedSongRepository
 ) : ViewModel() {
 
     // ソート順を保持するフロー
@@ -44,5 +45,11 @@ class SavedSongListViewModel @Inject constructor(
 
     fun updateSortOrder(order: SortOrder) {
         _sortOrder.value = order
+    }
+
+    fun deleteSong(song: SavedSong) {
+        viewModelScope.launch {
+            savedSongRepository.deleteSong(song)
+        }
     }
 }

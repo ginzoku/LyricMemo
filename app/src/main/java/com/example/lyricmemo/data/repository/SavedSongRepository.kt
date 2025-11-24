@@ -23,6 +23,10 @@ class SavedSongRepository @Inject constructor(
         dao.insert(song)
     }
 
+    suspend fun deleteSong(song: SavedSong) {
+        dao.delete(song)
+    }
+
     fun getAllSongs(): Flow<List<SavedSong>> {
         return dao.getAllSongs()
     }

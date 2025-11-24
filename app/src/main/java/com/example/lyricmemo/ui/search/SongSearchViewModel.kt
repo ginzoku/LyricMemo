@@ -53,9 +53,12 @@ class SongSearchViewModel @Inject constructor(
     init {
         _searchQuery
             .debounce(500) // 500ミリ秒入力がなければ実行
-            .filter { it.isNotBlank() } // 空白でなければ実行
             .onEach { query ->
-                searchSongs(query)
+                if (query.isNotBlank()) {
+                    searchSongs(query)
+                } else {
+                    clearSearchResults()
+                }
             }
             .launchIn(viewModelScope)
     }

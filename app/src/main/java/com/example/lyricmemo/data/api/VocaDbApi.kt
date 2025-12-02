@@ -1,6 +1,5 @@
 package com.example.lyricmemo.data.api
 
-import com.example.lyricmemo.data.model.VocaDbArtistResponse
 import com.example.lyricmemo.data.model.VocaDbSongResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -27,11 +26,4 @@ interface VocaDbApi {
         @Query("sort") sort: String = "FavoritedTimes"
     ): VocaDbSongResponse
     
-    // アーティスト検索
-    @GET("api/artists")
-    suspend fun searchArtists(
-        @Query("query") query: String,
-        @Query("maxResults") maxResults: Int = 1, // 最も関連性の高い1件を取得
-        @Query("sort") sort: String = "Name"
-    ): VocaDbArtistResponse
 }

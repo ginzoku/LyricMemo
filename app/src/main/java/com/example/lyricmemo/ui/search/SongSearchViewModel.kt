@@ -24,7 +24,8 @@ data class LyricsUiState(
     val lyricsBody: String = "ここに歌詞が表示されます",
     val isSaveButtonVisible: Boolean = true,
     val errorMessage: String? = null,
-    val youtubeUrl: String? = null // YouTubeのURL
+    val youtubeUrl: String? = null,
+    val thumbnailUrl: String? = null // サムネイル画像のURL
 )
 
 // 検索結果リスト画面用のUI状態
@@ -95,7 +96,7 @@ class SongSearchViewModel @Inject constructor(
     // リストから曲が選択されたとき (詳細画面へデータをセット)
     fun selectSong(song: SongItem) {
         val lyricText = song.lyrics?.firstOrNull()?.value
-        val youtubeUrl = song.pvs?.find { it.service.equals("Youtube", ignoreCase = true) }?.url
+        val youtubePv = song.pvs?.find { it.service.equals("Youtube", ignoreCase = true) }
         
         if (lyricText != null) {
             _uiState.value = LyricsUiState(
@@ -103,7 +104,8 @@ class SongSearchViewModel @Inject constructor(
                 artist = song.artistString,
                 lyricsBody = lyricText,
                 isSaveButtonVisible = true,
-                youtubeUrl = youtubeUrl
+                youtubeUrl = youtubePv?.url,
+                thumbnailUrl = youtubePv?.thumbUrl
             )
         } else {
             _uiState.value = LyricsUiState(
@@ -112,7 +114,8 @@ class SongSearchViewModel @Inject constructor(
                 lyricsBody = "歌詞データが登録されていませんでした。",
                 errorMessage = "No lyrics found",
                 isSaveButtonVisible = false,
-                youtubeUrl = youtubeUrl
+                youtubeUrl = youtubePv?.url,
+                thumbnailUrl = youtubePv?.thumbUrl
             )
         }
     }

@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.isVisible
@@ -14,6 +15,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bumptech.glide.Glide
 import com.example.lyricmemo.R
 import com.example.lyricmemo.ui.search.SongSearchViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -37,6 +39,7 @@ class LyricsDetailFragment : Fragment(R.layout.fragment_lyrics_detail) {
         val tvLyricsContent = view.findViewById<TextView>(R.id.tvLyricsContent)
         val fabSave = view.findViewById<FloatingActionButton>(R.id.fabSave)
         val btnYoutube = view.findViewById<Button>(R.id.btnYoutube)
+        val ivThumbnail = view.findViewById<ImageView>(R.id.ivThumbnail)
 
         // UI状態を監視して反映 (searchViewModel)
         viewLifecycleOwner.lifecycleScope.launch {
@@ -62,6 +65,18 @@ class LyricsDetailFragment : Fragment(R.layout.fragment_lyrics_detail) {
                         }
                     } else {
                         btnYoutube.isVisible = false
+                    }
+
+                    // サムネイル画像の表示
+                    if (state.thumbnailUrl != null) {
+                        ivThumbnail.isVisible = true
+                        Glide.with(this@LyricsDetailFragment)
+                            .load(state.thumbnailUrl)
+                            .placeholder(android.R.drawable.ic_menu_gallery) // 読み込み中の画像
+                            .error(android.R.drawable.stat_notify_error) // エラー時の画像
+                            .into(ivThumbnail)
+                    } else {
+                        ivThumbnail.isVisible = false
                     }
                 }
             }

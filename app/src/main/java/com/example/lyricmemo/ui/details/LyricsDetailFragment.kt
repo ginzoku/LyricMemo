@@ -101,7 +101,9 @@ class LyricsDetailFragment : Fragment(R.layout.fragment_lyrics_detail) {
                 lyricsDetailViewModel.saveSong(
                     title = currentState.title,
                     artist = currentState.artist,
-                    lyrics = currentState.lyricsBody
+                    lyrics = currentState.lyricsBody,
+                    youtubeUrl = currentState.youtubeUrl,
+                    thumbnailUrl = currentState.thumbnailUrl
                 )
             } else {
                 Toast.makeText(requireContext(), "保存するデータがありません", Toast.LENGTH_SHORT).show()

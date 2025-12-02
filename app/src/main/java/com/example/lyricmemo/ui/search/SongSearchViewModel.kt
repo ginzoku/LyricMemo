@@ -11,8 +11,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -126,7 +124,9 @@ class SongSearchViewModel @Inject constructor(
             title = song.title,
             artist = song.artist,
             lyricsBody = song.lyrics,
-            isSaveButtonVisible = false
+            isSaveButtonVisible = false,
+            youtubeUrl = song.youtubeUrl,
+            thumbnailUrl = song.thumbnailUrl
         )
     }
 }

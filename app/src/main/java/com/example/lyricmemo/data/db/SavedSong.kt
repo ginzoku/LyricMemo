@@ -9,5 +9,7 @@ data class SavedSong(
     val title: String,
     val artist: String,
     val lyrics: String,
-    val savedAt: Long = System.currentTimeMillis()
+    val savedAt: Long = System.currentTimeMillis(),
+    val youtubeUrl: String? = null, // 追加
+    val thumbnailUrl: String? = null // 追加
 )

@@ -8,7 +8,13 @@ import javax.inject.Inject
 class SavedSongRepository @Inject constructor(
     private val dao: SavedSongDao
 ) {
-    suspend fun saveSong(title: String, artist: String, lyrics: String) {
+    suspend fun saveSong(
+        title: String, 
+        artist: String, 
+        lyrics: String,
+        youtubeUrl: String?,
+        thumbnailUrl: String?
+    ) {
         // 重複チェック
         val duplicate = dao.findDuplicate(title, artist, lyrics)
         if (duplicate != null) {
@@ -18,7 +24,9 @@ class SavedSongRepository @Inject constructor(
         val song = SavedSong(
             title = title,
             artist = artist,
-            lyrics = lyrics
+            lyrics = lyrics,
+            youtubeUrl = youtubeUrl,
+            thumbnailUrl = thumbnailUrl
         )
         dao.insert(song)
     }

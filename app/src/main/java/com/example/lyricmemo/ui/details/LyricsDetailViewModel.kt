@@ -18,13 +18,19 @@ class LyricsDetailViewModel @Inject constructor(
     private val _saveMessage = MutableStateFlow<String?>(null)
     val saveMessage: StateFlow<String?> = _saveMessage.asStateFlow()
 
-    fun saveSong(title: String, artist: String, lyrics: String) {
+    fun saveSong(
+        title: String, 
+        artist: String, 
+        lyrics: String,
+        youtubeUrl: String?,
+        thumbnailUrl: String?
+    ) {
         viewModelScope.launch {
             try {
-                savedSongRepository.saveSong(title, artist, lyrics)
+                savedSongRepository.saveSong(title, artist, lyrics, youtubeUrl, thumbnailUrl)
                 _saveMessage.value = "保存しました"
             } catch (e: Exception) {
-                _saveMessage.value = "保存に失敗しました: ${e.message}"
+                _saveMessage.value = e.message ?: "保存に失敗しました"
             }
         }
     }

@@ -1,7 +1,10 @@
 package com.example.lyricmemo.ui.details
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.isVisible
@@ -33,6 +36,7 @@ class LyricsDetailFragment : Fragment(R.layout.fragment_lyrics_detail) {
         val tvArtist = view.findViewById<TextView>(R.id.tvArtist)
         val tvLyricsContent = view.findViewById<TextView>(R.id.tvLyricsContent)
         val fabSave = view.findViewById<FloatingActionButton>(R.id.fabSave)
+        val btnYoutube = view.findViewById<Button>(R.id.btnYoutube)
 
         // UI状態を監視して反映 (searchViewModel)
         viewLifecycleOwner.lifecycleScope.launch {
@@ -48,6 +52,17 @@ class LyricsDetailFragment : Fragment(R.layout.fragment_lyrics_detail) {
 
                     // 保存ボタンの表示制御
                     fabSave.isVisible = state.isSaveButtonVisible
+
+                    // YouTubeボタンの表示制御とクリック処理
+                    if (state.youtubeUrl != null) {
+                        btnYoutube.isVisible = true
+                        btnYoutube.setOnClickListener {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(state.youtubeUrl))
+                            startActivity(intent)
+                        }
+                    } else {
+                        btnYoutube.isVisible = false
+                    }
                 }
             }
         }

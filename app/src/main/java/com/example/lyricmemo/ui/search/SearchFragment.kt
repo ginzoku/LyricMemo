@@ -74,6 +74,9 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
             viewModel.onQueryChanged(it.toString())
         }
         chipGroup.setOnCheckedChangeListener { _, checkedId ->
+            // 検索欄のテキストをクリアする
+            etSearch?.text?.clear()
+            
             val searchType = when (checkedId) {
                 R.id.chipSongName -> SearchType.SONG_NAME
                 R.id.chipArtistName -> SearchType.ARTIST_NAME
@@ -97,6 +100,9 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                         if (state.songs.isNotEmpty()) {
                             recyclerView.adapter = songAdapter
                             songAdapter.submitList(state.songs)
+                        } else if (!state.isLoading && viewModel.artistListState.value.artists.isEmpty()) {
+                            // 他方のリストも空の場合のみクリア
+                            songAdapter.submitList(emptyList())
                         }
                     }
                 }
@@ -111,6 +117,9 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                         if (state.artists.isNotEmpty()) {
                             recyclerView.adapter = artistAdapter
                             artistAdapter.submitList(state.artists)
+                        } else if (!state.isLoading && viewModel.songListState.value.songs.isEmpty()){
+                             // 他方のリストも空の場合のみクリア
+                            artistAdapter.submitList(emptyList())
                         }
                     }
                 }

@@ -6,6 +6,7 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -55,11 +56,14 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     private fun setupAdapters(recyclerView: RecyclerView) {
         songAdapter = SearchResultAdapter { song ->
             viewModel.selectSong(song)
-            findNavController().navigate(R.id.action_searchFragment_to_lyricsDetailFragment)
+            findNavController().navigate(R.id.lyricsDetailFragment)
         }
         artistAdapter = ArtistAdapter { artist ->
-            // アーティストが選択されたら、そのIDで曲を検索
-            viewModel.searchSongsByArtistId(artist.id)
+            val bundle = bundleOf(
+                "artistId" to artist.id,
+                "artistName" to artist.name
+            )
+            findNavController().navigate(R.id.action_searchFragment_to_songListFragment, bundle)
         }
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
@@ -75,24 +79,8 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                 R.id.chipArtistName -> SearchType.ARTIST_NAME
                 else -> SearchType.SONG_NAME
             }
-            
-            // ヒントテキストを動的に変更
-            etSearch?.hint = when (searchType) {
-                SearchType.SONG_NAME -> "曲名を入力"
-                SearchType.ARTIST_NAME -> "アーティスト名を入力"
-            }
-            
+            etSearch?.hint = if (searchType == SearchType.SONG_NAME) "曲名を入力" else "アーティスト名を入力"
             viewModel.onSearchTypeChanged(searchType)
-        }
-        
-        // 初期状態のヒントを設定 (Chipの初期選択状態に合わせて)
-        val initialType = when (chipGroup.checkedChipId) {
-            R.id.chipArtistName -> SearchType.ARTIST_NAME
-            else -> SearchType.SONG_NAME
-        }
-        etSearch?.hint = when (initialType) {
-            SearchType.SONG_NAME -> "曲名を入力"
-            SearchType.ARTIST_NAME -> "アーティスト名を入力"
         }
     }
 

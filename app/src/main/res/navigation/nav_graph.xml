@@ -24,8 +24,8 @@
         android:label="SearchFragment"
         tools:layout="@layout/fragment_search">
         <action
-            android:id="@+id/action_searchFragment_to_lyricsDetailFragment"
-            app:destination="@id/lyricsDetailFragment" />
+            android:id="@+id/action_searchFragment_to_songListFragment"
+            app:destination="@id/songListFragment" />
     </fragment>
     
     <fragment
@@ -41,7 +41,7 @@
         tools:layout="@layout/fragment_saved_song_list">
         <action
             android:id="@+id/action_savedSongListFragment_to_lyricsDetailFragment"
-            app:destination="@id/lyricsDetailFragment" />
+            app:destination="@+id/lyricsDetailFragment" />
         <action
             android:id="@+id/action_savedSongListFragment_to_inputLyricsFragment"
             app:destination="@id/inputLyricsFragment" />
@@ -52,4 +52,21 @@
         android:name="com.example.lyricmemo.ui.input.InputLyricsFragment"
         android:label="InputLyricsFragment"
         tools:layout="@layout/fragment_input_lyrics" />
+        
+    <fragment
+        android:id="@+id/songListFragment"
+        android:name="com.example.lyricmemo.ui.list.SongListFragment"
+        android:label="SongListFragment"
+        tools:layout="@layout/fragment_song_list">
+        <argument
+            android:name="artistId"
+            app:argType="integer" />
+        <argument
+            android:name="artistName"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_songListFragment_to_lyricsDetailFragment"
+            app:destination="@id/lyricsDetailFragment" />
+    </fragment>
+
 </navigation>

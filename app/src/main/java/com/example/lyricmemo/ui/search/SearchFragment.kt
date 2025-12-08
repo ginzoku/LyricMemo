@@ -6,6 +6,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -29,10 +30,17 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
         etSearch = view.findViewById(R.id.etSearch)
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
         val progressBar = view.findViewById<ProgressBar>(R.id.progressBar)
         val tvErrorMessage = view.findViewById<TextView>(R.id.tvErrorMessage)
+
+        // Toolbarに戻るボタンを設定
+        toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
+        toolbar.setNavigationOnClickListener {
+            findNavController().popBackStack()
+        }
 
         val adapter = SearchResultAdapter { clickedSong ->
             viewModel.selectSong(clickedSong)

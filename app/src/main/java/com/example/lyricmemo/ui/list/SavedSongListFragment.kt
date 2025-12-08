@@ -16,6 +16,7 @@ import com.example.lyricmemo.R
 import com.example.lyricmemo.data.db.SavedSong
 import com.example.lyricmemo.ui.search.SongSearchViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -58,6 +59,7 @@ class SavedSongListFragment : Fragment(R.layout.fragment_saved_song_list) {
         }
 
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
+        val fabAddNewSong = view.findViewById<FloatingActionButton>(R.id.fabAddNewSong)
         
         val adapter = SavedSongAdapter(
             onItemClick = { clickedSong ->
@@ -73,6 +75,12 @@ class SavedSongListFragment : Fragment(R.layout.fragment_saved_song_list) {
 
         recyclerView.adapter = adapter
         recyclerView.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+
+        // FABのクリック処理
+        fabAddNewSong.setOnClickListener {
+            // 歌詞入力画面へ遷移
+            findNavController().navigate(R.id.action_savedSongListFragment_to_inputLyricsFragment)
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {

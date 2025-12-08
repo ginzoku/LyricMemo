@@ -23,7 +23,6 @@
         android:name="com.example.lyricmemo.ui.search.SearchFragment"
         android:label="SearchFragment"
         tools:layout="@layout/fragment_search">
-        <!-- 追加: SearchFragmentから直接詳細画面への遷移 -->
         <action
             android:id="@+id/action_searchFragment_to_lyricsDetailFragment"
             app:destination="@id/lyricsDetailFragment" />
@@ -43,5 +42,14 @@
         <action
             android:id="@+id/action_savedSongListFragment_to_lyricsDetailFragment"
             app:destination="@id/lyricsDetailFragment" />
+        <action
+            android:id="@+id/action_savedSongListFragment_to_inputLyricsFragment"
+            app:destination="@id/inputLyricsFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/inputLyricsFragment"
+        android:name="com.example.lyricmemo.ui.input.InputLyricsFragment"
+        android:label="InputLyricsFragment"
+        tools:layout="@layout/fragment_input_lyrics" />
 </navigation>

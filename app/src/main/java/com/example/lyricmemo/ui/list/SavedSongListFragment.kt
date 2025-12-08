@@ -26,7 +26,7 @@ class SavedSongListFragment : Fragment(R.layout.fragment_saved_song_list) {
     private val viewModel: SavedSongListViewModel by viewModels()
     
     // 共有ViewModelを使って詳細画面にデータを渡す
-    private val sharedViewModel: SongSearchViewModel by activityViewModels()
+    private val songSearchViewModel: SongSearchViewModel by activityViewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -64,7 +64,7 @@ class SavedSongListFragment : Fragment(R.layout.fragment_saved_song_list) {
         val adapter = SavedSongAdapter(
             onItemClick = { clickedSong ->
                 // クリックされたら共有ViewModelにデータをセットして遷移
-                sharedViewModel.setSavedSong(clickedSong)
+                songSearchViewModel.setSavedSong(clickedSong)
                 findNavController().navigate(R.id.action_savedSongListFragment_to_lyricsDetailFragment)
             },
             onItemLongClick = { longClickedSong ->

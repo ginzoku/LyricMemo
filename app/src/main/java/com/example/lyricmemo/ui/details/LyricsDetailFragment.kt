@@ -44,7 +44,8 @@ class LyricsDetailFragment : Fragment(R.layout.fragment_lyrics_detail) {
         // UI状態を監視して反映 (searchViewModel)
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                searchViewModel.uiState.collect { state ->
+                // 参照先を uiState から lyricsUiState に変更
+                searchViewModel.lyricsUiState.collect { state ->
                     tvSongTitle.text = state.title
                     tvArtist.text = state.artist
                     tvLyricsContent.text = state.lyricsBody
@@ -96,7 +97,7 @@ class LyricsDetailFragment : Fragment(R.layout.fragment_lyrics_detail) {
 
         // 保存ボタンの処理
         fabSave.setOnClickListener {
-            val currentState = searchViewModel.uiState.value
+            val currentState = searchViewModel.lyricsUiState.value // 参照先を uiState から lyricsUiState に変更
             if (currentState.title.isNotBlank() && currentState.lyricsBody.isNotBlank()) {
                 lyricsDetailViewModel.saveSong(
                     title = currentState.title,

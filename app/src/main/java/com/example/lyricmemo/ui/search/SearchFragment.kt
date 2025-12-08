@@ -2,7 +2,6 @@ package com.example.lyricmemo.ui.search
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -16,8 +15,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.lyricmemo.R
+import com.example.lyricmemo.data.repository.SearchType
+import com.google.android.material.chip.ChipGroup
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -26,49 +28,102 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     private val viewModel: SongSearchViewModel by activityViewModels()
     private var etSearch: EditText? = null
+    private lateinit var songAdapter: SearchResultAdapter
+    private lateinit var artistAdapter: ArtistAdapter
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
         etSearch = view.findViewById(R.id.etSearch)
+        val chipGroupSearchType = view.findViewById<ChipGroup>(R.id.chipGroupSearchType)
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
         val progressBar = view.findViewById<ProgressBar>(R.id.progressBar)
         val tvErrorMessage = view.findViewById<TextView>(R.id.tvErrorMessage)
 
-        // Toolbarに戻るボタンを設定
-        toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
-        toolbar.setNavigationOnClickListener {
-            findNavController().popBackStack()
-        }
+        setupToolbar(toolbar)
+        setupAdapters(recyclerView)
+        setupListeners(chipGroupSearchType)
+        observeViewModel(progressBar, tvErrorMessage, recyclerView)
+    }
 
-        val adapter = SearchResultAdapter { clickedSong ->
-            viewModel.selectSong(clickedSong)
+    private fun setupToolbar(toolbar: Toolbar) {
+        toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
+        toolbar.setNavigationOnClickListener { findNavController().popBackStack() }
+    }
+
+    private fun setupAdapters(recyclerView: RecyclerView) {
+        songAdapter = SearchResultAdapter { song ->
+            viewModel.selectSong(song)
             findNavController().navigate(R.id.action_searchFragment_to_lyricsDetailFragment)
         }
-
-        recyclerView.adapter = adapter
+        artistAdapter = ArtistAdapter { artist ->
+            // アーティストが選択されたら、そのIDで曲を検索
+            viewModel.searchSongsByArtistId(artist.id)
+        }
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+    }
 
-        // EditTextのテキスト変更を監視
+    private fun setupListeners(chipGroup: ChipGroup) {
         etSearch?.addTextChangedListener {
             viewModel.onQueryChanged(it.toString())
         }
+        chipGroup.setOnCheckedChangeListener { _, checkedId ->
+            val searchType = when (checkedId) {
+                R.id.chipSongName -> SearchType.SONG_NAME
+                R.id.chipArtistName -> SearchType.ARTIST_NAME
+                else -> SearchType.SONG_NAME
+            }
+            
+            // ヒントテキストを動的に変更
+            etSearch?.hint = when (searchType) {
+                SearchType.SONG_NAME -> "曲名を入力"
+                SearchType.ARTIST_NAME -> "アーティスト名を入力"
+            }
+            
+            viewModel.onSearchTypeChanged(searchType)
+        }
+        
+        // 初期状態のヒントを設定 (Chipの初期選択状態に合わせて)
+        val initialType = when (chipGroup.checkedChipId) {
+            R.id.chipArtistName -> SearchType.ARTIST_NAME
+            else -> SearchType.SONG_NAME
+        }
+        etSearch?.hint = when (initialType) {
+            SearchType.SONG_NAME -> "曲名を入力"
+            SearchType.ARTIST_NAME -> "アーティスト名を入力"
+        }
+    }
 
-        // 検索結果を監視
+    private fun observeViewModel(progressBar: ProgressBar, tvError: TextView, recyclerView: RecyclerView) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.searchResultState.collect { state ->
-                    progressBar.isVisible = state.isLoading
-                    
-                    if (state.errorMessage != null) {
-                        tvErrorMessage.text = state.errorMessage
-                        tvErrorMessage.isVisible = true
-                        recyclerView.isVisible = false
-                    } else {
-                        tvErrorMessage.isVisible = false
-                        recyclerView.isVisible = state.searchResults.isNotEmpty()
-                        adapter.submitList(state.searchResults)
+                // 曲リストの監視
+                launch {
+                    viewModel.songListState.collect { state ->
+                        progressBar.isVisible = state.isLoading
+                        tvError.isVisible = state.errorMessage != null
+                        tvError.text = state.errorMessage
+
+                        if (state.songs.isNotEmpty()) {
+                            recyclerView.adapter = songAdapter
+                            songAdapter.submitList(state.songs)
+                        }
+                    }
+                }
+
+                // アーティストリストの監視
+                launch {
+                    viewModel.artistListState.collect { state ->
+                        progressBar.isVisible = state.isLoading
+                        tvError.isVisible = state.errorMessage != null
+                        tvError.text = state.errorMessage
+
+                        if (state.artists.isNotEmpty()) {
+                            recyclerView.adapter = artistAdapter
+                            artistAdapter.submitList(state.artists)
+                        }
                     }
                 }
             }

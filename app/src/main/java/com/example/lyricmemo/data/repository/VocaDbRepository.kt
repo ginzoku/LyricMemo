@@ -1,51 +1,52 @@
 package com.example.lyricmemo.data.repository
 
+import android.util.Log
 import com.example.lyricmemo.data.api.VocaDbApi
+import com.example.lyricmemo.data.model.ArtistItem
 import com.example.lyricmemo.data.model.SongItem
 import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
 
+enum class SearchType {
+    SONG_NAME,
+    ARTIST_NAME
+}
+
 class VocaDbRepository @Inject constructor(
     private val vocaDbApi: VocaDbApi
 ) {
-    // 1件だけ取得する
-    suspend fun getSong(songName: String): SongItem? {
+    // 曲名で曲を検索
+    suspend fun searchSongsByName(query: String): List<SongItem> {
         return try {
-            val response = vocaDbApi.searchSongs(
-                query = songName, 
-                nameMatchMode = "Auto", // Autoに戻す
-                maxResults = 10
-            )
-            response.items.firstOrNull { !it.lyrics.isNullOrEmpty() }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            null
-        } catch (e: HttpException) {
-            e.printStackTrace()
-            null
+            val response = vocaDbApi.searchSongs(query = query, nameMatchMode = "Auto")
+            response.items.filter { !it.lyrics.isNullOrEmpty() }
         } catch (e: Exception) {
-            e.printStackTrace()
-            null
+            Log.e("APIDebug", "searchSongsByName failed", e)
+            emptyList()
         }
     }
 
-    // 複数件検索して返す (歌詞があるものだけ)
-    suspend fun searchSongsList(query: String): List<SongItem> {
+    // アーティスト名（部分一致）でアーティストのリストを検索
+    suspend fun searchArtists(query: String): List<ArtistItem> {
         return try {
-            val response = vocaDbApi.searchSongs(
-                query = query, 
-                nameMatchMode = "Auto" // Autoに戻す
-            )
-            response.items.filter { !it.lyrics.isNullOrEmpty() }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            emptyList()
-        } catch (e: HttpException) {
-            e.printStackTrace()
-            emptyList()
+            val response = vocaDbApi.searchArtists(query = query)
+            response.items
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("APIDebug", "searchArtists failed", e)
+            emptyList()
+        }
+    }
+
+    // アーティストIDで曲を検索
+    suspend fun searchSongsByArtistId(artistId: Int): List<SongItem> {
+        return try {
+            Log.d("APIDebug", "Repository: Calling searchSongsByArtist with id: $artistId")
+            val response = vocaDbApi.searchSongsByArtist(artistId = artistId)
+            Log.d("APIDebug", "Repository: API response received, ${response.items.size} items")
+            response.items.filter { !it.lyrics.isNullOrEmpty() }
+        } catch (e: Exception) {
+            Log.e("APIDebug", "searchSongsByArtistId failed", e)
             emptyList()
         }
     }

@@ -24,7 +24,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         // 検索画面へ遷移
         btnGoToSearch.setOnClickListener {
             // 遷移する前に前回の検索結果をクリア
-            viewModel.clearSearchResults()
+            viewModel.clearAllResults() // メソッド名を変更
             findNavController().navigate(R.id.action_homeFragment_to_searchFragment)
         }
 

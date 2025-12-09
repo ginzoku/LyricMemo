@@ -17,6 +17,9 @@ interface SavedSongDao {
     @Query("SELECT * FROM saved_songs ORDER BY savedAt DESC")
     fun getAllSongs(): Flow<List<SavedSong>>
 
+    @Query("SELECT * FROM saved_songs WHERE title LIKE :query OR artist LIKE :query")
+    fun searchSongs(query: String): Flow<List<SavedSong>>
+
     @Query("SELECT * FROM saved_songs WHERE title = :title AND artist = :artist AND lyrics = :lyrics LIMIT 1")
     suspend fun findDuplicate(title: String, artist: String, lyrics: String): SavedSong?
 }

@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_search"
+        android:icon="@android:drawable/ic_menu_search"
+        android:title="検索"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="ifRoom|collapseActionView" />
+
     <item
         android:id="@+id/action_sort"
         android:icon="@android:drawable/ic_menu_sort_by_size"
@@ -15,7 +23,7 @@
                 android:title="アーティスト名順" />
             <item
                 android:id="@+id/sort_by_date"
-                android:title="日付順（新しい順）" />
+                android:title="追加日順" />
         </menu>
     </item>
 </menu>

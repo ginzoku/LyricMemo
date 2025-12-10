@@ -38,4 +38,9 @@ class SavedSongRepository @Inject constructor(
     fun getAllSongs(): Flow<List<SavedSong>> {
         return dao.getAllSongs()
     }
+
+    // 追加: 検索用のメソッド
+    fun searchSongs(query: String): Flow<List<SavedSong>> {
+        return dao.searchSongs(query)
+    }
 }

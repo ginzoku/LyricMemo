@@ -38,11 +38,11 @@ class VocaDbRepository @Inject constructor(
         }
     }
 
-    // アーティストIDで曲を検索
-    suspend fun searchSongsByArtistId(artistId: Int): List<SongItem> {
+    // アーティストIDで曲を検索 (ページネーション対応)
+    suspend fun searchSongsByArtistId(artistId: Int, start: Int = 0): List<SongItem> {
         return try {
-            Log.d("APIDebug", "Repository: Calling searchSongsByArtist with id: $artistId")
-            val response = vocaDbApi.searchSongsByArtist(artistId = artistId)
+            Log.d("APIDebug", "Repository: Calling searchSongsByArtist with id: $artistId, start: $start")
+            val response = vocaDbApi.searchSongsByArtist(artistId = artistId, start = start)
             Log.d("APIDebug", "Repository: API response received, ${response.items.size} items")
             response.items.filter { !it.lyrics.isNullOrEmpty() }
         } catch (e: Exception) {

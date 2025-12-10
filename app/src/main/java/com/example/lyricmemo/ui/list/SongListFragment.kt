@@ -46,15 +46,28 @@ class SongListFragment : Fragment(R.layout.fragment_song_list) {
         recyclerView.adapter = adapter
         recyclerView.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
 
+        // スクロールリスナーを追加してページネーションを実装
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                val totalItemCount = layoutManager.itemCount
+                val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
+
+                // 下端に近づいたら次のデータを読み込む (例: 残り5アイテム)
+                if (!viewModel.uiState.value.isLoading && totalItemCount <= (lastVisibleItemPosition + 5)) {
+                    viewModel.loadMoreSongs()
+                }
+            }
+        })
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     toolbar.title = state.toolbarTitle
-                    progressBar.isVisible = state.isLoading
+                    // 初回の読み込み時のみプログレスバーを表示したい場合は工夫が必要だが、今回は簡易的に
+                    progressBar.isVisible = state.isLoading && state.songs.isEmpty()
                     adapter.submitList(state.songs)
-
-                    // エラーメッセージの表示（必要に応じてTextViewを追加）
-                    // state.errorMessage?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
                 }
             }
         }

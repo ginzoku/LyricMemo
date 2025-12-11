@@ -12,17 +12,16 @@ import com.example.lyricmemo.data.model.SongItem
 
 class SearchResultAdapter(
     private val onItemClick: (SongItem) -> Unit
-) : ListAdapter<SongItem, SearchResultAdapter.ViewHolder>(SongItemDiffCallback()) {
+) : ListAdapter<SongItem, SearchResultAdapter.ViewHolder>(SongDiffCallback()) {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvTitle: TextView = view.findViewById(R.id.tvTitle)
         val tvArtist: TextView = view.findViewById(R.id.tvArtist)
-        val tvLyricsPreview: TextView = view.findViewById(R.id.tvLyricsPreview)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_saved_song, parent, false) // レイアウトは使い回す
+            .inflate(R.layout.item_saved_song, parent, false)
         return ViewHolder(view)
     }
 
@@ -30,22 +29,18 @@ class SearchResultAdapter(
         val song = getItem(position)
         holder.tvTitle.text = song.name
         holder.tvArtist.text = song.artistString
-        
-        val lyricText = song.lyrics?.firstOrNull()?.value?.replace("\n", " ") ?: ""
-        holder.tvLyricsPreview.text = lyricText
-
         holder.itemView.setOnClickListener {
             onItemClick(song)
         }
     }
 
-    class SongItemDiffCallback : DiffUtil.ItemCallback<SongItem>() {
+    class SongDiffCallback : DiffUtil.ItemCallback<SongItem>() {
         override fun areItemsTheSame(oldItem: SongItem, newItem: SongItem): Boolean {
-            return oldItem.name == newItem.name && oldItem.artistString == newItem.artistString
+            return oldItem.id == newItem.id // IDで比較
         }
 
         override fun areContentsTheSame(oldItem: SongItem, newItem: SongItem): Boolean {
-            return oldItem == newItem
+            return oldItem == newItem // 中身の比較はデータクラスのequalsに任せる
         }
     }
 }

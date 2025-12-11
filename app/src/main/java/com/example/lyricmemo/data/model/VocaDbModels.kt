@@ -5,6 +5,7 @@ data class VocaDbSongResponse(
 )
 
 data class SongItem(
+    val id: Int, // IDを追加
     val name: String,
     val artistString: String,
     val lyrics: List<Lyric>?,
@@ -13,13 +14,13 @@ data class SongItem(
 
 data class Lyric(
     val value: String,
-    val cultureCode: String // "ja" など
+    val cultureCode: String
 )
 
 data class PV(
     val url: String,
-    val service: String, // NicoNicoDouga, Youtube, etc.
-    val pvType: String, // Original or other
+    val service: String,
+    val pvType: String,
     val thumbUrl: String?
 )
 

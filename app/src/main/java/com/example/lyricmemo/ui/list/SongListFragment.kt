@@ -42,7 +42,8 @@ class SongListFragment : Fragment(R.layout.fragment_song_list) {
             findNavController().navigate(R.id.action_songListFragment_to_lyricsDetailFragment)
         }
 
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        val layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
         recyclerView.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
 
@@ -50,12 +51,11 @@ class SongListFragment : Fragment(R.layout.fragment_song_list) {
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
                 val totalItemCount = layoutManager.itemCount
                 val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
 
-                // 下端に近づいたら次のデータを読み込む (例: 残り5アイテム)
-                if (!viewModel.uiState.value.isLoading && totalItemCount <= (lastVisibleItemPosition + 5)) {
+                // 下端に近づいたら次のデータを読み込む (ViewModel側で重複実行は防止される)
+                if (totalItemCount > 0 && totalItemCount <= (lastVisibleItemPosition + 5)) {
                     viewModel.loadMoreSongs()
                 }
             }
@@ -65,7 +65,7 @@ class SongListFragment : Fragment(R.layout.fragment_song_list) {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     toolbar.title = state.toolbarTitle
-                    // 初回の読み込み時のみプログレスバーを表示したい場合は工夫が必要だが、今回は簡易的に
+                    // 初回の読み込み時のみプログレスバーを表示
                     progressBar.isVisible = state.isLoading && state.songs.isEmpty()
                     adapter.submitList(state.songs)
                 }

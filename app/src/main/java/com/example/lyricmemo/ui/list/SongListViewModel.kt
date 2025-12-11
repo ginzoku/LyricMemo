@@ -31,20 +31,17 @@ class SongListViewModel @Inject constructor(
     private var currentStart = 0
     private var hasMore = true
     private var isLoadingMore = false
-    private val artistId: Int? = savedStateHandle.get<Int>("artistId")
+    private val artistId: Int = savedStateHandle.get<Int>("artistId")!!
 
     init {
         val artistName = savedStateHandle.get<String>("artistName")
-        
-        if (artistId != null) {
-            _uiState.value = _uiState.value.copy(toolbarTitle = artistName ?: "曲一覧")
-            loadSongs(reset = true)
-        }
+        _uiState.value = _uiState.value.copy(toolbarTitle = artistName ?: "曲一覧")
+        loadSongs(true)
     }
 
     fun loadMoreSongs() {
-        if (hasMore && !isLoadingMore && artistId != null) {
-            loadSongs(reset = false)
+        if (hasMore && !isLoadingMore) {
+            loadSongs(false)
         }
     }
 
@@ -53,31 +50,31 @@ class SongListViewModel @Inject constructor(
             if (reset) {
                 currentStart = 0
                 hasMore = true
+                isLoadingMore = false
                 _uiState.value = _uiState.value.copy(isLoading = true, songs = emptyList())
             } else {
+                if (isLoadingMore) return@launch
                 isLoadingMore = true
             }
 
-            val newSongs = repository.searchSongsByArtistId(artistId!!, start = currentStart)
+            val newSongs = repository.searchSongsByArtistId(artistId, start = currentStart)
             
-            // 取得件数が0ならこれ以上データはない
             if (newSongs.isEmpty()) {
                 hasMore = false
             } else {
                 currentStart += newSongs.size
-                val currentList = _uiState.value.songs.toMutableList()
-                currentList.addAll(newSongs)
-                _uiState.value = _uiState.value.copy(songs = currentList)
+                val currentSongs = _uiState.value.songs
+                val updatedSongs = (currentSongs + newSongs).distinctBy { it.id }
+                _uiState.value = _uiState.value.copy(songs = updatedSongs)
             }
 
             if (reset) {
                 _uiState.value = _uiState.value.copy(isLoading = false)
-                if (newSongs.isEmpty()) {
+                if (_uiState.value.songs.isEmpty()) {
                     _uiState.value = _uiState.value.copy(errorMessage = "曲が見つかりませんでした。")
                 }
-            } else {
-                isLoadingMore = false
             }
+            isLoadingMore = false
         }
     }
 }

@@ -28,7 +28,6 @@ class SongSearchViewModel @Inject constructor(
     private val repository: VocaDbRepository
 ) : ViewModel() {
 
-    // 各種UI状態
     private val _lyricsUiState = MutableStateFlow(LyricsUiState())
     val lyricsUiState: StateFlow<LyricsUiState> = _lyricsUiState.asStateFlow()
 
@@ -38,12 +37,10 @@ class SongSearchViewModel @Inject constructor(
     private val _artistListState = MutableStateFlow(ArtistListUiState())
     val artistListState: StateFlow<ArtistListUiState> = _artistListState.asStateFlow()
 
-    // 検索クエリと検索タイプ
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
     private val _searchType = MutableStateFlow(SearchType.SONG_NAME)
 
-    // ページネーション用の変数
     private var songNameSearchStart = 0
     private var hasMoreSongs = true
     private var isLoadingMoreSongs = false
@@ -75,14 +72,16 @@ class SongSearchViewModel @Inject constructor(
         }
     }
 
-    fun searchSongsByName(query: String, reset: Boolean) {
+    private fun searchSongsByName(query: String, reset: Boolean) {
         viewModelScope.launch {
             if (reset) {
                 songNameSearchStart = 0
                 hasMoreSongs = true
+                isLoadingMoreSongs = false
                 _artistListState.value = ArtistListUiState()
                 _songListState.value = SongListUiState(isLoading = true, songs = emptyList())
             } else {
+                if (isLoadingMoreSongs) return@launch
                 isLoadingMoreSongs = true
             }
             
@@ -92,8 +91,9 @@ class SongSearchViewModel @Inject constructor(
                 hasMoreSongs = false
             } else {
                 songNameSearchStart += newSongs.size
-                val currentSongs = if (reset) emptyList() else _songListState.value.songs
-                _songListState.value = _songListState.value.copy(songs = currentSongs + newSongs)
+                val currentSongs = _songListState.value.songs
+                val updatedSongs = (currentSongs + newSongs).distinctBy { it.id }
+                _songListState.value = _songListState.value.copy(songs = updatedSongs)
             }
             
             if (reset) {
@@ -101,13 +101,12 @@ class SongSearchViewModel @Inject constructor(
                 if (_songListState.value.songs.isEmpty()) {
                     _songListState.value = _songListState.value.copy(errorMessage = "曲が見つかりませんでした。")
                 }
-            } else {
-                isLoadingMoreSongs = false
             }
+            isLoadingMoreSongs = false
         }
     }
 
-    fun searchArtists(query: String) {
+    private fun searchArtists(query: String) {
         viewModelScope.launch {
             _songListState.value = SongListUiState()
             _artistListState.value = ArtistListUiState(isLoading = true)
@@ -123,8 +122,11 @@ class SongSearchViewModel @Inject constructor(
     fun clearAllResults() {
         _songListState.value = SongListUiState()
         _artistListState.value = ArtistListUiState()
+        songNameSearchStart = 0
+        hasMoreSongs = true
+        isLoadingMoreSongs = false
     }
-
+    
     fun selectSong(song: SongItem) {
         val lyricText = song.lyrics?.firstOrNull()?.value
         val youtubePv = song.pvs?.find { it.service.equals("Youtube", ignoreCase = true) }

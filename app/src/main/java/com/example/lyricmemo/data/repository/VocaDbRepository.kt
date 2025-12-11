@@ -16,10 +16,10 @@ enum class SearchType {
 class VocaDbRepository @Inject constructor(
     private val vocaDbApi: VocaDbApi
 ) {
-    // 曲名で曲を検索
-    suspend fun searchSongsByName(query: String): List<SongItem> {
+    // 曲名で曲を検索 (ページネーション対応)
+    suspend fun searchSongsByName(query: String, start: Int = 0): List<SongItem> {
         return try {
-            val response = vocaDbApi.searchSongs(query = query, nameMatchMode = "Auto")
+            val response = vocaDbApi.searchSongs(query = query, nameMatchMode = "Auto", start = start)
             response.items.filter { !it.lyrics.isNullOrEmpty() }
         } catch (e: Exception) {
             Log.e("APIDebug", "searchSongsByName failed", e)

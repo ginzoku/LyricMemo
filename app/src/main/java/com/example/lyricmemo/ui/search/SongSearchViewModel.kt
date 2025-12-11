@@ -1,6 +1,5 @@
 package com.example.lyricmemo.ui.search
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.lyricmemo.data.db.SavedSong
@@ -8,7 +7,6 @@ import com.example.lyricmemo.data.model.ArtistItem
 import com.example.lyricmemo.data.model.SongItem
 import com.example.lyricmemo.data.repository.SearchType
 import com.example.lyricmemo.data.repository.VocaDbRepository
-import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,8 +28,6 @@ class SongSearchViewModel @Inject constructor(
     private val repository: VocaDbRepository
 ) : ViewModel() {
 
-    private val gson = Gson()
-
     // 各種UI状態
     private val _lyricsUiState = MutableStateFlow(LyricsUiState())
     val lyricsUiState: StateFlow<LyricsUiState> = _lyricsUiState.asStateFlow()
@@ -47,12 +43,17 @@ class SongSearchViewModel @Inject constructor(
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
     private val _searchType = MutableStateFlow(SearchType.SONG_NAME)
 
+    // ページネーション用の変数
+    private var songNameSearchStart = 0
+    private var hasMoreSongs = true
+    private var isLoadingMoreSongs = false
+
     init {
         viewModelScope.launch {
             _searchQuery.debounce(500).collect { query ->
                 if (query.isNotBlank()) {
                     when (_searchType.value) {
-                        SearchType.SONG_NAME -> searchSongsByName(query)
+                        SearchType.SONG_NAME -> searchSongsByName(query, true)
                         SearchType.ARTIST_NAME -> searchArtists(query)
                     }
                 } else {
@@ -65,24 +66,52 @@ class SongSearchViewModel @Inject constructor(
     fun onQueryChanged(query: String) { _searchQuery.value = query }
     fun onSearchTypeChanged(type: SearchType) {
         _searchType.value = type
-        if (_searchQuery.value.isNotBlank()) {
-            when (type) {
-                SearchType.SONG_NAME -> searchSongsByName(_searchQuery.value)
-                SearchType.ARTIST_NAME -> searchArtists(_searchQuery.value)
+        onQueryChanged("")
+    }
+
+    fun loadMoreSongs() {
+        if (_searchType.value == SearchType.SONG_NAME && hasMoreSongs && !isLoadingMoreSongs && _searchQuery.value.isNotBlank()) {
+            searchSongsByName(_searchQuery.value, false)
+        }
+    }
+
+    fun searchSongsByName(query: String, reset: Boolean) {
+        viewModelScope.launch {
+            if (reset) {
+                songNameSearchStart = 0
+                hasMoreSongs = true
+                _artistListState.value = ArtistListUiState()
+                _songListState.value = SongListUiState(isLoading = true, songs = emptyList())
+            } else {
+                isLoadingMoreSongs = true
+            }
+            
+            val newSongs = repository.searchSongsByName(query, start = songNameSearchStart)
+            
+            if (newSongs.isEmpty()) {
+                hasMoreSongs = false
+            } else {
+                songNameSearchStart += newSongs.size
+                val currentSongs = if (reset) emptyList() else _songListState.value.songs
+                _songListState.value = _songListState.value.copy(songs = currentSongs + newSongs)
+            }
+            
+            if (reset) {
+                _songListState.value = _songListState.value.copy(isLoading = false)
+                if (_songListState.value.songs.isEmpty()) {
+                    _songListState.value = _songListState.value.copy(errorMessage = "曲が見つかりませんでした。")
+                }
+            } else {
+                isLoadingMoreSongs = false
             }
         }
     }
 
-    // アーティスト名でアーティストを検索
-    private fun searchArtists(query: String) {
+    fun searchArtists(query: String) {
         viewModelScope.launch {
-            _songListState.value = SongListUiState() // 曲リストはクリア
+            _songListState.value = SongListUiState()
             _artistListState.value = ArtistListUiState(isLoading = true)
             val artists = repository.searchArtists(query)
-            
-            // --- ログ出力 --- 
-            Log.d("APIDebug", "searchArtists found: ${gson.toJson(artists)}")
-            
             if (artists.isNotEmpty()) {
                 _artistListState.value = ArtistListUiState(artists = artists)
             } else {
@@ -91,43 +120,11 @@ class SongSearchViewModel @Inject constructor(
         }
     }
 
-    // アーティストIDで曲を検索
-    fun searchSongsByArtistId(artistId: Int) {
-        viewModelScope.launch {
-            _artistListState.value = ArtistListUiState() // アーティストリストはクリア
-            _songListState.value = SongListUiState(isLoading = true)
-            
-            Log.d("APIDebug", "Searching songs for artistId: $artistId")
-            val songs = repository.searchSongsByArtistId(artistId)
-            
-            // --- ログ出力 --- 
-            Log.d("APIDebug", "searchSongsByArtistId found: ${gson.toJson(songs)}")
-
-            if (songs.isNotEmpty()) {
-                _songListState.value = SongListUiState(songs = songs)
-            } else {
-                _songListState.value = SongListUiState(errorMessage = "このアーティストの曲は見つかりませんでした。")
-            }
-        }
-    }
-
-    // ... (他のメソッドは変更なし) ...
-    private fun searchSongsByName(query: String) {
-        viewModelScope.launch {
-            _artistListState.value = ArtistListUiState()
-            _songListState.value = SongListUiState(isLoading = true)
-            val songs = repository.searchSongsByName(query)
-            if (songs.isNotEmpty()) {
-                _songListState.value = SongListUiState(songs = songs)
-            } else {
-                _songListState.value = SongListUiState(errorMessage = "曲が見つかりませんでした。")
-            }
-        }
-    }
     fun clearAllResults() {
         _songListState.value = SongListUiState()
         _artistListState.value = ArtistListUiState()
     }
+
     fun selectSong(song: SongItem) {
         val lyricText = song.lyrics?.firstOrNull()?.value
         val youtubePv = song.pvs?.find { it.service.equals("Youtube", ignoreCase = true) }
@@ -137,6 +134,7 @@ class SongSearchViewModel @Inject constructor(
             _lyricsUiState.value = LyricsUiState(title = song.name, artist = song.artistString, lyricsBody = "歌詞データなし", errorMessage = "No lyrics found", isSaveButtonVisible = false, youtubeUrl = youtubePv?.url, thumbnailUrl = youtubePv?.thumbUrl)
         }
     }
+
     fun setSavedSong(song: SavedSong) {
         _lyricsUiState.value = LyricsUiState(title = song.title, artist = song.artist, lyricsBody = song.lyrics, isSaveButtonVisible = false, youtubeUrl = song.youtubeUrl, thumbnailUrl = song.thumbnailUrl)
     }

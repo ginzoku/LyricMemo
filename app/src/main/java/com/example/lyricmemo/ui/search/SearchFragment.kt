@@ -31,6 +31,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     private var etSearch: EditText? = null
     private lateinit var songAdapter: SearchResultAdapter
     private lateinit var artistAdapter: ArtistAdapter
+    private var currentSearchType = SearchType.SONG_NAME
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -43,8 +44,8 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         val tvErrorMessage = view.findViewById<TextView>(R.id.tvErrorMessage)
 
         setupToolbar(toolbar)
-        setupAdapters(recyclerView)
-        setupListeners(chipGroupSearchType)
+        setupAdaptersAndRecyclerView(recyclerView)
+        setupListeners(chipGroupSearchType, recyclerView)
         observeViewModel(progressBar, tvErrorMessage, recyclerView)
     }
 
@@ -53,74 +54,72 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         toolbar.setNavigationOnClickListener { findNavController().popBackStack() }
     }
 
-    private fun setupAdapters(recyclerView: RecyclerView) {
+    private fun setupAdaptersAndRecyclerView(recyclerView: RecyclerView) {
         songAdapter = SearchResultAdapter { song ->
             viewModel.selectSong(song)
-            findNavController().navigate(R.id.lyricsDetailFragment)
+            findNavController().navigate(R.id.lyricsDetailFragment) 
         }
         artistAdapter = ArtistAdapter { artist ->
-            val bundle = bundleOf(
-                "artistId" to artist.id,
-                "artistName" to artist.name
-            )
+            val bundle = bundleOf("artistId" to artist.id, "artistName" to artist.name)
             findNavController().navigate(R.id.action_searchFragment_to_songListFragment, bundle)
         }
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+        // 初期アダプターを設定
+        recyclerView.adapter = songAdapter 
     }
 
-    private fun setupListeners(chipGroup: ChipGroup) {
-        etSearch?.addTextChangedListener {
-            viewModel.onQueryChanged(it.toString())
-        }
+    private fun setupListeners(chipGroup: ChipGroup, recyclerView: RecyclerView) {
+        etSearch?.addTextChangedListener { viewModel.onQueryChanged(it.toString()) }
+        
         chipGroup.setOnCheckedChangeListener { _, checkedId ->
-            // 検索欄のテキストをクリアする
             etSearch?.text?.clear()
-            
-            val searchType = when (checkedId) {
-                R.id.chipSongName -> SearchType.SONG_NAME
+            currentSearchType = when (checkedId) {
                 R.id.chipArtistName -> SearchType.ARTIST_NAME
                 else -> SearchType.SONG_NAME
             }
-            etSearch?.hint = if (searchType == SearchType.SONG_NAME) "曲名を入力" else "アーティスト名を入力"
-            viewModel.onSearchTypeChanged(searchType)
+            etSearch?.hint = if (currentSearchType == SearchType.SONG_NAME) "曲名を入力" else "アーティスト名を入力"
+            viewModel.onSearchTypeChanged(currentSearchType)
+
+            // アダプターを切り替え
+            recyclerView.adapter = if (currentSearchType == SearchType.SONG_NAME) songAdapter else artistAdapter
         }
+
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                if (currentSearchType == SearchType.SONG_NAME) {
+                    val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                    val totalItemCount = layoutManager.itemCount
+                    val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
+                    
+                    if (totalItemCount <= (lastVisibleItem + 5)) {
+                        viewModel.loadMoreSongs()
+                    }
+                }
+            }
+        })
     }
 
     private fun observeViewModel(progressBar: ProgressBar, tvError: TextView, recyclerView: RecyclerView) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // 曲リストの監視
                 launch {
                     viewModel.songListState.collect { state ->
-                        progressBar.isVisible = state.isLoading
+                        progressBar.isVisible = state.isLoading && state.songs.isEmpty()
                         tvError.isVisible = state.errorMessage != null
                         tvError.text = state.errorMessage
-
-                        if (state.songs.isNotEmpty()) {
-                            recyclerView.adapter = songAdapter
-                            songAdapter.submitList(state.songs)
-                        } else if (!state.isLoading && viewModel.artistListState.value.artists.isEmpty()) {
-                            // 他方のリストも空の場合のみクリア
-                            songAdapter.submitList(emptyList())
-                        }
+                        
+                        songAdapter.submitList(state.songs)
                     }
                 }
-
-                // アーティストリストの監視
                 launch {
                     viewModel.artistListState.collect { state ->
                         progressBar.isVisible = state.isLoading
                         tvError.isVisible = state.errorMessage != null
                         tvError.text = state.errorMessage
-
-                        if (state.artists.isNotEmpty()) {
-                            recyclerView.adapter = artistAdapter
-                            artistAdapter.submitList(state.artists)
-                        } else if (!state.isLoading && viewModel.songListState.value.songs.isEmpty()){
-                             // 他方のリストも空の場合のみクリア
-                            artistAdapter.submitList(emptyList())
-                        }
+                        
+                        artistAdapter.submitList(state.artists)
                     }
                 }
             }

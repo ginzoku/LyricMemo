@@ -13,9 +13,9 @@ interface VocaDbApi {
         @Query("nameMatchMode") nameMatchMode: String = "Auto",
         @Query("fields") fields: String = "Lyrics,PVs",
         @Query("lang") lang: String = "Japanese",
-        @Query("maxResults") maxResults: Int = 200,
+        @Query("maxResults") maxResults: Int = 50, // 200 -> 50 に戻す
         @Query("sort") sort: String = "FavoritedTimes",
-        @Query("start") start: Int = 0 // 追加
+        @Query("start") start: Int = 0
     ): VocaDbSongResponse
 
     // アーティストID指定での曲検索
@@ -24,9 +24,9 @@ interface VocaDbApi {
         @Query("artistId[]") artistId: Int,
         @Query("fields") fields: String = "Lyrics,PVs",
         @Query("lang") lang: String = "Japanese",
-        @Query("maxResults") maxResults: Int = 50, // 1回あたりの取得数は50に戻して、小刻みに読み込む
+        @Query("maxResults") maxResults: Int = 50,
         @Query("sort") sort: String = "PublishDate",
-        @Query("start") start: Int = 0 // 追加: 取得開始位置
+        @Query("start") start: Int = 0
     ): VocaDbSongResponse
     
     // アーティスト検索（部分一致）

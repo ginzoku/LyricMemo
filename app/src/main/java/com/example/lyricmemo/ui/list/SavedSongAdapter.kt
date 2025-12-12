@@ -18,7 +18,7 @@ class SavedSongAdapter(
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvTitle: TextView = view.findViewById(R.id.tvTitle)
         val tvArtist: TextView = view.findViewById(R.id.tvArtist)
-        val tvLyricsPreview: TextView = view.findViewById(R.id.tvLyricsPreview)
+        val tvLyricSnippet: TextView = view.findViewById(R.id.tvLyricSnippet) // IDを修正
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -32,8 +32,9 @@ class SavedSongAdapter(
         holder.tvTitle.text = song.title
         holder.tvArtist.text = song.artist
         
-        val previewText = song.lyrics.replace("\n", " ")
-        holder.tvLyricsPreview.text = previewText
+        // 歌詞の最初の1行を取得して表示
+        val firstLyricLine = song.lyrics.split("\n").firstOrNull()
+        holder.tvLyricSnippet.text = firstLyricLine ?: ""
 
         holder.itemView.setOnClickListener {
             onItemClick(song)

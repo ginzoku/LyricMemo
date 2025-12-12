@@ -17,6 +17,7 @@ class SearchResultAdapter(
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvTitle: TextView = view.findViewById(R.id.tvTitle)
         val tvArtist: TextView = view.findViewById(R.id.tvArtist)
+        val tvLyricSnippet: TextView = view.findViewById(R.id.tvLyricSnippet)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -29,6 +30,11 @@ class SearchResultAdapter(
         val song = getItem(position)
         holder.tvTitle.text = song.name
         holder.tvArtist.text = song.artistString
+        
+        // 歌詞の最初の1行を取得して表示
+        val firstLyricLine = song.lyrics?.firstOrNull()?.value?.split("\n")?.firstOrNull()
+        holder.tvLyricSnippet.text = firstLyricLine ?: "(歌詞情報なし)"
+        
         holder.itemView.setOnClickListener {
             onItemClick(song)
         }
@@ -36,11 +42,11 @@ class SearchResultAdapter(
 
     class SongDiffCallback : DiffUtil.ItemCallback<SongItem>() {
         override fun areItemsTheSame(oldItem: SongItem, newItem: SongItem): Boolean {
-            return oldItem.id == newItem.id // IDで比較
+            return oldItem.id == newItem.id
         }
 
         override fun areContentsTheSame(oldItem: SongItem, newItem: SongItem): Boolean {
-            return oldItem == newItem // 中身の比較はデータクラスのequalsに任せる
+            return oldItem == newItem
         }
     }
 }
